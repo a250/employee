@@ -34,7 +34,7 @@ class Tree():
             parents = [self.root_id]
             
         for p in parents:
-            if (random.random()<prob) or (level<=2):
+            if (random.random()<prob) or (level<=2):  ## делаем обязательным создание первх двух уровней, дальше полагаемся на вероятность
 
                 qty = random.randint(1,2)
                 add_nodes = [('val_'+str(random.randint(1,100))) for i in range(qty)]
