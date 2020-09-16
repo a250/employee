@@ -64,7 +64,7 @@ def displayTreeRecursive(nodes = [], level = 0):
     for n in nodes:
 
         print(f'-{"--"*level*2}',f"{tree_dict[n]['node'].id}: {tree_dict[n]['node'].val}")
-        exploreTree(tree_dict[n]['links'][1:], level +1)
+        displayTreeRecursive(tree_dict[n]['links'][1:], level +1)
     
 def exploreTreeLoop():
     tree = [0] + tree_dict[0]['links']
@@ -89,14 +89,18 @@ import pprint
 
 tree_dict = t.getTree()
 
-print('\nShow tree with node objects: \n')
+print('\n1. Show tree with node objects')
+print('Tree model:')
+print("     {node_id: {'node': node_obj, 'link': [childs node_id,...,...]}}\n")
 pprint.pprint(tree_dict)
 
-print('\nShow tree with node values: \n')
+print('\n2. Show tree with node values:')
+print('Tree model:')
+print("     {node_id: {'node': node.val, 'link': [childs node_id,...,...]}}\n")
 pprint.pprint(t.getTreeValue())
 
-print('\nExplore tree with recurion\n')
+print('\n3. Explore tree with recurion\n')
 displayTreeRecursive()
 
-print('\nExplore tree with loop\n')
+print('\n4. Explore tree with loop\n')
 exploreTreeLoop()
