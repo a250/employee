@@ -50,9 +50,9 @@ class Tree:
 
                 qty = random.randint(1, 2)
                 add_nodes = [("val_" + str(random.randint(1, 100))) for i in range(qty)]
-                _parent = self.addChilds(p, add_nodes)
+                childs_list = self.addChilds(p, add_nodes)
 
-                self.createRandomTree(prob, _parent, level + 1)
+                self.createRandomTree(prob, childs_list, level + 1)
 
     def getTreeValue(self):
         """
