@@ -22,7 +22,6 @@ Should return 'CPULoad5min*10', so...
 from aiohttp import web
 import json
 from asyncio import sleep
-#from pprint import pprint
 import logging
 
 def check_json_errors(jj):
@@ -75,8 +74,7 @@ def calculation(raw_data_in):
     err = check_json_errors(json_in)
     if err:
         error['type'], error['msg'] = err
-        pprint(err)
-        pprint(error)        
+    
         logging.warning('Warning! Error occur: {}, {}'.format(error['type'], error['msg']))
         return error, None
 
