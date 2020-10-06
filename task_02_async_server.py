@@ -21,120 +21,63 @@ Should return 'CPULoad5min*10', so...
 
 from aiohttp import web
 import json
-from asyncio import sleep
+import asyncio 
 import logging
 
-def check_json_errors(jj):
-
-    keys = jj.keys()
-
-    # check ['graphs']
-    lookup_key = 'graphs'
-    if lookup_key not in jj.keys():
-        return ('KeyError','There is no [{}] in request'.format(lookup_key))
-
-    # check ['graphs'][0]   
-    if not isinstance(jj['graphs'], list):
-        return ('TypeError','Wrong structure for  request[graphs]. It should be List')
-
-    # check ['graphs'][0]['formula']        
-    lookup_key = 'formula'        
-    if lookup_key not in jj['graphs'][0].keys():
-        return ('KeyError','There is no [{}] in request'.format(lookup_key))
-
-    # check ['df']
-    lookup_key = 'df'
-    if lookup_key not in jj.keys():
-        return ('KeyError','There is no [{}] in request'.format(lookup_key))
-
-    # check ['df']['CPULoad5min']
-    lookup_key = 'CPULoad5min'
-    if lookup_key not in jj['df'].keys():
-        return ('KeyError','There is no [{}] in request'.format(lookup_key))
-
-    # check ['df']['CPULoad5min']['values']
-    lookup_key = 'values'
-    if lookup_key not in jj['df']['CPULoad5min'].keys():
-        return ('KeyError','There is no [{}] in request'.format(lookup_key))
-
-    return None
   
 def calculation(raw_data_in):
-    error = {'type': '', 'msg': ''}
 
-    try:                                     # request string -> json
-        json_in = json.loads(raw_data_in)
-        logging.debug('Info: Error occur: {}'.format(json_in))
-
-    except json.JSONDecodeError as err:
-        error = {'type':type(err).__name__, 'msg': err.msg}
-        logging.warning('Warning! Error occur: {}, {}'.format(error['type'], error['msg']))
-        return error, None
-
-    err = check_json_errors(json_in)
-    if err:
-        error['type'], error['msg'] = err
-    
-        logging.warning('Warning! Error occur: {}, {}'.format(error['type'], error['msg']))
-        return error, None
-
+    json_in = json.loads(raw_data_in)
+    logging.debug('Info. Received JSON: {}'.format(json_in))
 
     formula = json_in['graphs'][0]['formula']
     CPULoad5min = json_in['df']['CPULoad5min']['values']
     formula = '['+formula.replace('CPULoad5min','i')+' for i in {}]'.format(CPULoad5min)
 
-    try:                                      # try evaluate formula
-        values = eval(formula)
-
-    except ValueError as err:
-        error = {'type':type(err).__name__, 'msg': err.msg}
-        logging.warning('Warning! Error occur: {}, {}'.format(error['type'], error['msg']))
-        return error, None
-
-    except SyntaxError as err:
-        error = {'type':type(err).__name__, 'msg': err.msg}
-        logging.warning('Warning! Error occur: {}, {}'.format(error['type'], error['msg']))
-        return error, None
+    values = eval(formula)
 
     json_out = json_in.copy()
     json_out['df']['CPULoad5min']['values'] = values
 
-    logging.debug('Info: Error occur: {}'.format(json_out))
+    logging.debug('Info. Returned JSON: {}'.format(json_out))
 
-    return None, json_out
+    return json_out
   
 
 async def get_response(request):
-  return web.Response(text = 'Ok, it works asynchronously!')
+    return web.Response(text = 'Ok, it works asynchronously!')
   
 
 async def post_parse(request):
-  #await sleep(10)  # to check asyncro 
-  
-  raw_data_in = await request.text()
-  
-  error, json_out = calculation(raw_data_in)
-  
-  if error:
-    return web.json_response(error)    
-  else:
-    return web.json_response(json_out, text=None, body=None, status=200, reason=None,
-              headers=None, content_type='application/json', dumps=json.dumps)
+  #await asyncio.sleep(10)  # to check asyncro 
+
+    try:
+        raw_data_in = await request.text()
+
+        json_out = calculation(raw_data_in)
+
+    except Exception as ex:
+        error = {'type': type(ex).__name__, 'msg':str(ex)}
+        
+        return web.json_response(error, text=None, body=None, status=200, reason=None,              headers=None, content_type='application/json', dumps=json.dumps)
+
+
+    return web.json_response(json_out, text=None, body=None, status=200, reason=None,              headers=None, content_type='application/json', dumps=json.dumps)
   
   
 def main():
-  log_file ='web_service.log'
-  logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-  logging.info('Started')
+    log_file ='web_service.log'
+    logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    logging.info('Started')
+
+
+    app = web.Application()
+    app.add_routes([web.post('/cpuload', post_parse), 
+                    web.get('/',get_response)])
+    web.run_app(app)
+
+    logging.info('Stoped')
 
   
-  app = web.Application()
-  app.add_routes([web.post('/cpuload', post_parse), 
-                  web.get('/',get_response)])
-  web.run_app(app)
-  
-  logging.info('Stoped')
-  
-  
 if __name__ == "__main__":
-  main()
+    main()
